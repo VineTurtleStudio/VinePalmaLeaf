@@ -1,0 +1,45 @@
+[package]
+name = "vinepalma-leaf"
+version = "0.1.0"
+description = "跨平台全能电子书阅读器"
+authors = ["you"]
+edition = "2021"
+
+[lib]
+name = "vinepalma_leaf_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite", "macros"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1"
+dirs = "5"
+# PDF 解析
+pdf-extract = "0.7"
+xml-rs = "0.8"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+# FB2 解析 (FictionBook2 XML格式)
+quick-xml = { version = "0.37", features = ["serialize"] }
+# RTF 解析
+rtf-parser = "0.1"
+# MOBI 解析
+mobi = "0.8"
+# Base64 编码（用于大文件传输）
+base64 = "0.22"
+# URL 解码（自定义协议路径解析）
+urlencoding = "2"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

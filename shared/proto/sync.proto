@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package vinepalma.leaf.sync;
+
+message DeviceInfo {
+  string id = 1;
+  string name = 2;
+  string device_type = 3;
+  string last_sync_at = 4;
+}
+
+message SyncMessage {
+  string device_id = 1;
+  string device_name = 2;
+  MessageType message_type = 3;
+  bytes data = 4;
+  string timestamp = 5;
+}
+
+enum MessageType {
+  HANDSHAKE = 0;
+  DATA_SYNC = 1;
+  ACK = 2;
+  ERROR = 3;
+}
+
+message SyncData {
+  repeated SyncBook books = 1;
+  repeated SyncProgress progress = 2;
+  repeated SyncNote notes = 3;
+  repeated SyncBookmark bookmarks = 4;
+}
+
+message SyncBook {
+  string id = 1;
+  string title = 2;
+  string author = 3;
+  string format = 4;
+  optional string file_hash = 5;
+  string added_at = 6;
+}
+
+message SyncProgress {
+  string book_id = 1;
+  uint32 current_page = 2;
+  uint32 total_pages = 3;
+  string last_read_at = 4;
+}
+
+message SyncNote {
+  string id = 1;
+  string book_id = 2;
+  string content = 3;
+  uint32 page = 4;
+  string created_at = 5;
+}
+
+message SyncBookmark {
+  string id = 1;
+  string book_id = 2;
+  string title = 3;
+  uint32 page = 4;
+  string created_at = 5;
+}
