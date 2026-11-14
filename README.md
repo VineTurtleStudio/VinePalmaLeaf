@@ -216,3 +216,10 @@ npm run tauri build
 3. 書庫の表紙をクリックして閲覧開始
 4. 右パネルでフォント・サイズ・行間・テーマを調整
 5. 終了時に読書位置を保存
+---
+
+## 许可 / License
+
+本项目以 [MIT](./LICENSE) 许可证发布。
+
+Licensed under the [MIT License](./LICENSE).
