@@ -1,515 +1,218 @@
+<div align="center">
+
 # VinePalma Leaf 🍃
 
-> 一款跨平台全能电子书阅读器，支持几乎所有主流电子书格式，提供真实书籍般的阅读体验，并具备局域网、蓝牙及云端多端同步能力。
+**本地优先的桌面电子书阅读器**
 
-<p align="center">
-  <img src="./docs/assets/logo.png" alt="VinePalma Leaf" width="120">
-</p>
+<a href="#-简体中文">简体中文</a> ·
+<a href="#-繁體中文">繁體中文</a> ·
+<a href="#-english">English</a> ·
+<a href="#-日本語">日本語</a>
 
-<p align="center">
-  <a href="#功能特性">功能特性</a> •
-  <a href="#技术架构">技术架构</a> •
-  <a href="#快速开始">快速开始</a> •
-  <a href="#开发指南">开发指南</a> •
-  <a href="#同步机制">同步机制</a> •
-  <a href="#路线图">路线图</a>
-</p>
+</div>
 
 ---
 
-## 功能特性
+## 🇨🇳 简体中文
 
-### 📚 全格式支持
-- **文本类**：EPUB (2/3), MOBI, AZW3, FB2, TXT, HTML, Markdown
-- **文档类**：PDF (含扫描版 OCR 重排), DJVU, DOCX
-- **漫画类**：CBZ, CBR, CBT, CB7
-- **持续扩展**：通过插件化架构支持更多格式
+基于 **Tauri 2 + React + TypeScript** 的电子书阅读器。书库、阅读、标注、设置全部在本机完成，**书籍文件不会上传**。
 
-### 📖 拟真阅读体验
-- 拟真翻页动画（页角卷曲 / 滑动翻页 / 仿真翻页）
-- 专业排版引擎：自定义字体、行距、段距、边距、分栏
-- 多主题：日间 / 夜间 /  sepia / 自定义 CSS
-- PDF 智能重排：针对扫描版 PDF 的流式重排与裁边
-- 漫画阅读模式：双页对开、日漫从右至左、卷轴连续模式
+### 当前实现状态
 
-### 🔄 多端同步
-- **局域网同步**：同一 WiFi 下自动发现设备，零配置同步
-- **蓝牙同步**：近场设备发现与阅读进度轻量同步
-- **WebDAV**：兼容坚果云、Nextcloud、群晖等自托管方案
-- **云端同步**（可选）：官方云服务，端到端加密
+| 功能 | 状态 |
+|---|---|
+| EPUB 阅读 | ✅ 可用 |
+| PDF 阅读 | ✅ 可用（含缩放与连续滚动） |
+| 纯文本 / Markdown 阅读 | ✅ 可用 |
+| 书库管理（封面、最近阅读、收藏） | ✅ 可用 |
+| 阅读设置（字体、字号、行距、主题） | ✅ 可用 |
+| 局域网 / 蓝牙同步 | 🚧 界面已就位，同步逻辑开发中 |
+| MOBI / AZW3 / DJVU / CBZ / CBR / DOCX | 🚧 计划中 |
 
-### ✍️ 知识管理
-- 高亮、划线、批注、书签
-- 笔记导出：Markdown / Notion / Logseq / Obsidian
-- 全文搜索：本地书籍内容索引与快速检索
-- 阅读统计：阅读时长、页数、速度分析
-
-### 🖥️ 跨平台覆盖
-| 平台 | 状态 | 说明 |
-|------|------|------|
-| Windows | ✅ 支持 | 10 / 11 |
-| macOS | ✅ 支持 | 12+ (Intel & Apple Silicon) |
-| Linux | ✅ 支持 | Ubuntu 20.04+, Fedora, Arch |
-| Android | 🚧 开发中 | Tauri v2 移动端适配 |
-| iOS | 📋 规划中 | 后续迭代 |
-
----
-
-## 技术架构
-
-### 整体架构
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        前端层 (Frontend)                      │
-│  React 18 + TypeScript + Zustand + TailwindCSS              │
-│  - 阅读器 UI / 书库管理 / 设置面板 / 同步界面               │
-└──────────────────────┬──────────────────────────────────────┘
-                       │ Tauri IPC (Commands / Events)
-┌──────────────────────▼──────────────────────────────────────┐
-│                      Rust 核心层 (Core)                      │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────────────┐ │
-│  │  格式解析引擎 │ │   排版引擎    │ │     同步引擎         │ │
-│  │  - epub-rs   │ │  - 分页算法   │ │  - mDNS 发现        │ │
-│  │  - pdfium    │ │  - 字体回退   │ │  - Bluetooth LE     │ │
-│  │  - libmobi   │ │  - CSS 子集   │ │  - WebDAV 客户端    │ │
-│  │  - 漫画解包  │ │    渲染      │ │  - 冲突合并算法      │ │
-│  └──────────────┘ └──────────────┘ └──────────────────────┘ │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────────────┐ │
-│  │   数据库层    │ │   文件系统    │ │     系统服务         │ │
-│  │  - SQLite    │ │  - 书籍缓存   │ │  - 后台同步守护      │ │
-│  │  - FTS5 全文 │ │  - 封面缩略图 │ │  - 系统通知          │ │
-│  │    搜索索引  │ │  - 笔记导出   │ │  - 自动导入监视      │ │
-│  └──────────────┘ └──────────────┘ └──────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 技术栈
-
-| 层级 | 技术选型 | 说明 |
-|------|----------|------|
-| 桌面框架 | [Tauri v2](https://v2.tauri.app/) | Rust 核心 + Web 前端，产物极小，内存占用低 |
-| 前端框架 | React 18 + TypeScript | 组件化 UI，类型安全 |
-| 状态管理 | Zustand | 轻量级全局状态 |
-| UI 样式 | TailwindCSS | 原子化 CSS，快速构建 |
-| 阅读渲染 | 自研 Canvas 渲染器 + iframe 沙箱 | EPUB 复杂排版与 PDF 双轨方案 |
-| 后端语言 | Rust 1.75+ | 高性能、内存安全、跨平台编译 |
-| 数据库 | SQLite (via `sqlx` / `rusqlite`) | 本地书库、阅读进度、笔记索引 |
-| 序列化 | Protocol Buffers (`prost`) | 设备间同步数据格式 |
-| 局域网 | `mdns-sd` / `zeroconf` | 服务发现，零配置组网 |
-| 蓝牙 | `btleplug` (Rust) | 跨平台 BLE 通信 |
-| EPUB 解析 | `epub-rs` / 自研 XML 解析 | 基于 zip + OPF 规范 |
-| PDF 渲染 | `pdfium-render` (Google PDFium 绑定) | 业界最强开源 PDF 引擎 |
-| MOBI/AZW3 | `libmobi` (Rust 绑定) | 原生解析，无需转换 |
-| 漫画 | 自研压缩包流式解压 | 支持大文件边解压边阅读 |
-
----
-
-## 快速开始
+> 仓库不夸大能力：上表按代码实际实现标注。更完整的格式规划见 [docs/PLAN.md](./docs/PLAN.md)。
 
 ### 环境要求
 
-- **Rust** `>= 1.75` ([安装指南](https://www.rust-lang.org/tools/install))
-- **Node.js** `>= 18` ([安装指南](https://nodejs.org/))
-- **Tauri CLI** 与系统依赖
+| 依赖 | 版本 |
+|---|---|
+| Node.js | ≥ 20 |
+| Rust | ≥ 1.77（Tauri 2 要求） |
+| 系统 | Windows 10/11（需 WebView2）· macOS 13+ · Ubuntu 22+ |
 
-#### 平台特定依赖
-
-<details>
-<summary><b>Windows</b></summary>
-
-- [Microsoft Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-- WebView2 运行时（Windows 10/11 通常已预装）
-
-</details>
-
-<details>
-<summary><b>macOS</b></summary>
+### 快速开始
 
 ```bash
-# Xcode Command Line Tools
-xcode-select --install
-```
-
-</details>
-
-<details>
-<summary><b>Linux (Ubuntu/Debian)</b></summary>
-
-```bash
-sudo apt update
-sudo apt install libwebkit2gtk-4.1-dev   build-essential   curl   wget   file   libxdo3   libssl-dev   libayatana-appindicator3-dev   librsvg2-dev
-```
-
-</details>
-
-<details>
-<summary><b>Linux (Fedora)</b></summary>
-
-```bash
-sudo dnf install webkit2gtk4.1-devel   openssl-devel   curl   wget   libappindicator-gtk3-devel   librsvg2-devel
-```
-
-</details>
-
-<details>
-<summary><b>Android (交叉编译)</b></summary>
-
-```bash
-# 1. 安装 Android Studio 或 Command Line Tools
-# 2. 通过 sdkmanager 安装:
-#    - NDK (最新版)
-#    - Android SDK Platform-Tools
-#    - Android SDK Build-Tools
-# 3. 设置环境变量 ANDROID_HOME 与 NDK_HOME
-```
-
-</details>
-
-### 克隆与安装
-
-```bash
-# 克隆仓库
-git clone https://github.com/your-org/vinepalma-leaf.git
-cd vinepalma-leaf
-
-# 安装前端依赖
 npm install
-
-# 安装 Tauri CLI (若未全局安装)
-npm install -g @tauri-apps/cli
+npm run tauri dev     # 开发模式
+npm run tauri build   # 打包
 ```
 
-### 开发模式运行
+只调前端：`npm run dev`
+
+### 使用
+
+1. 首次启动会创建本地书库目录
+2. 点「导入」选择 EPUB / PDF / TXT 文件
+3. 在书库中点击封面开始阅读
+4. 阅读界面右侧可调字体、字号、行距、主题
+5. 关闭时自动记住阅读位置
+
+### 目录结构
+
+```
+src/
+  components/
+    library/        书库（书架、封面卡片）
+    reader/         阅读器
+      formats/      EPUB / PDF / 文本 三种渲染器
+    favorites/      收藏
+    recent/         最近阅读
+    settings/       阅读与应用设置
+    sync/           同步面板（开发中）
+  stores/           状态（书籍、同步）
+  types/            类型定义
+  utils/            工具函数
+src-tauri/
+  src/commands/     书籍、格式、笔记、阅读、同步命令
+docs/               文档与资源
+```
+
+### 常见问题
+
+- **EPUB 打开空白**：确认文件未加密（DRM 的 EPUB 不支持）
+- **PDF 渲染慢**：扫描版大文件首屏较慢，可先在设置里降低渲染比例
+- **导入后书库不刷新**：退出重进，或在书库页下拉刷新
+
+## 🇹🇼 繁體中文
+
+以 **Tauri 2 + React + TypeScript** 打造的電子書閱讀器。書庫、閱讀、標註、設定全部在本機完成，**書籍檔案不會上傳**。
+
+### 目前實作狀態
+
+| 功能 | 狀態 |
+|---|---|
+| EPUB 閱讀 | ✅ 可用 |
+| PDF 閱讀 | ✅ 可用（縮放與連續捲動） |
+| 純文字 / Markdown | ✅ 可用 |
+| 書庫管理（封面、最近閱讀、收藏） | ✅ 可用 |
+| 閱讀設定（字體、字級、行距、主題） | ✅ 可用 |
+| 區域網路 / 藍牙同步 | 🚧 介面就緒，同步邏輯開發中 |
+| MOBI / AZW3 / DJVU / CBZ / CBR / DOCX | 🚧 規劃中 |
+
+> 完整格式規劃見 [docs/PLAN.md](./docs/PLAN.md)。
+
+### 環境需求
+
+| 依賴 | 版本 |
+|---|---|
+| Node.js | ≥ 20 |
+| Rust | ≥ 1.77（Tauri 2 需求） |
+| 系統 | Windows 10/11（WebView2）· macOS 13+ · Ubuntu 22+ |
+
+### 快速開始
 
 ```bash
-# 同时启动前端 dev server 与 Tauri 桌面窗口
+npm install
 npm run tauri dev
-```
-
-首次编译 Rust 核心可能耗时 3-10 分钟（视机器性能），后续增量编译通常在秒级。
-
-### 生产构建
-
-```bash
-# 构建当前平台的安装包
 npm run tauri build
 ```
 
-产物位于 `src-tauri/target/release/bundle/`：
-- **Windows**: `.msi` (安装包) / `.exe` (便携版)
-- **macOS**: `.dmg` (通用/分架构)
-- **Linux**: `.AppImage` / `.deb` / `.rpm`
+### 使用方式
 
-### Android 构建 (Tauri v2)
+1. 首次啟動會建立本機書庫目錄
+2. 點「匯入」選擇 EPUB / PDF / TXT
+3. 在書庫點封面開始閱讀
+4. 右側面板可調字體、字級、行距、主題
+5. 關閉時自動記住閱讀位置
 
-```bash
-# 确保已配置 Android SDK 与 NDK
-npm run tauri android dev        # 开发调试
-npm run tauri android build      # 构建 APK / AAB
-```
+## 🇬🇧 English
 
----
+A **Tauri 2 + React + TypeScript** ebook reader. Library, reading, annotations and settings are all local — **your books are never uploaded**.
 
-## 开发指南
+### Current status
 
-### 项目结构
+| Feature | Status |
+|---|---|
+| EPUB reading | ✅ working |
+| PDF reading | ✅ working (zoom + continuous scroll) |
+| Plain text / Markdown | ✅ working |
+| Library (covers, recent, favourites) | ✅ working |
+| Reading settings (font, size, spacing, theme) | ✅ working |
+| LAN / Bluetooth sync | 🚧 UI in place, sync logic in progress |
+| MOBI / AZW3 / DJVU / CBZ / CBR / DOCX | 🚧 planned |
 
-```
-vinepalma-leaf/
-├── src/                          # 前端源码 (React + TypeScript)
-│   ├── components/               # 通用组件
-│   │   ├── reader/               # 阅读器核心组件
-│   │   ├── library/              # 书库管理组件
-│   │   ├── sync/                 # 同步状态与面板
-│   │   └── ui/                   # 基础 UI 组件 (Button, Modal...)
-│   ├── hooks/                    # 自定义 React Hooks
-│   ├── stores/                   # Zustand 状态定义
-│   ├── types/                    # TypeScript 类型定义
-│   ├── utils/                    # 前端工具函数
-│   └── App.tsx                   # 根组件
-│
-├── src-tauri/                    # Tauri Rust 后端
-│   ├── src/
-│   │   ├── main.rs               # 程序入口
-│   │   ├── lib.rs                # 库入口与模块聚合
-│   │   ├── commands/             # Tauri IPC 命令 (暴露给前端调用)
-│   │   │   ├── book.rs           # 书籍 CRUD
-│   │   │   ├── reader.rs         # 阅读控制 (打开、翻页、跳转)
-│   │   │   ├── sync.rs           # 同步触发与状态查询
-│   │   │   └── note.rs           # 笔记与高亮操作
-│   │   ├── core/                 # 核心业务逻辑
-│   │   │   ├── formats/          # 格式解析器
-│   │   │   │   ├── epub.rs
-│   │   │   │   ├── pdf.rs
-│   │   │   │   ├── mobi.rs
-│   │   │   │   ├── txt.rs
-│   │   │   │   └── comic.rs      # CBZ/CBR 解析
-│   │   │   ├── renderer/         # 排版渲染引擎
-│   │   │   │   ├── paginator.rs  # 分页算法
-│   │   │   │   ├── typesetter.rs # 排版计算
-│   │   │   │   └── theme.rs      # 主题管理
-│   │   │   └── document.rs       # 文档抽象层
-│   │   ├── sync/                 # 同步模块
-│   │   │   ├── lan.rs            # 局域网同步 (mDNS + TCP)
-│   │   │   ├── bluetooth.rs      # 蓝牙同步 (BLE + RFCOMM)
-│   │   │   ├── webdav.rs         # WebDAV 客户端
-│   │   │   ├── cloud.rs          # 云端同步 (预留)
-│   │   │   ├── protocol.rs       # Protobuf 序列化/反序列化
-│   │   │   └── merge.rs          # 冲突合并算法
-│   │   ├── database/             # 数据持久化
-│   │   │   ├── mod.rs            # 连接池与初始化
-│   │   │   ├── schema.sql        # 表结构定义
-│   │   │   ├── book.rs           # 书籍元数据 DAO
-│   │   │   ├── progress.rs       # 阅读进度 DAO
-│   │   │   ├── note.rs           # 笔记与高亮 DAO
-│   │   │   └── fts.rs            # 全文搜索索引
-│   │   ├── fs/                   # 文件系统工具
-│   │   │   ├── cache.rs          # 书籍缓存与解压
-│   │   │   ├── thumbnail.rs      # 封面缩略图生成
-│   │   │   └── watcher.rs        # 目录监视自动导入
-│   │   └── error.rs              # 全局错误类型定义
-│   ├── Cargo.toml                # Rust 依赖管理
-│   ├── tauri.conf.json           # Tauri 配置
-│   └── capabilities/             # Tauri v2 权限配置
-│
-├── shared/                       # 前后端共享类型
-│   └── proto/                    # Protocol Buffers 定义
-│       ├── sync.proto
-│       └── book.proto
-│
-├── docs/                         # 项目文档
-│   ├── ARCHITECTURE.md           # 架构详细设计
-│   ├── SYNC_PROTOCOL.md          # 同步协议规范
-│   ├── FORMAT_SUPPORT.md         # 格式支持矩阵
-│   └── CONTRIBUTING.md           # 贡献者指南
-│
-├── scripts/                      # 构建与发布脚本
-├── tests/                        # 集成测试
-└── package.json
-```
+> The table reflects what the code actually does; the broader format plan lives in [docs/PLAN.md](./docs/PLAN.md).
 
-### 核心开发流程
+### Requirements
 
-#### 1. 添加新的 IPC 命令
+| Dependency | Version |
+|---|---|
+| Node.js | ≥ 20 |
+| Rust | ≥ 1.77 (Tauri 2) |
+| OS | Windows 10/11 (WebView2) · macOS 13+ · Ubuntu 22+ |
 
-**Rust 端** (`src-tauri/src/commands/xxx.rs`):
-```rust
-use tauri::State;
-use crate::core::AppState;
-
-#[tauri::command]
-pub async fn get_book_progress(
-    state: State<'_, AppState>,
-    book_id: String,
-) -> Result<Progress, String> {
-    state.db.progress().get(&book_id).await.map_err(|e| e.to_string())
-}
-```
-
-**注册命令** (`src-tauri/src/main.rs`):
-```rust
-fn main() {
-    tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![
-            commands::get_book_progress,
-            // ... 其他命令
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-}
-```
-
-**前端调用**:
-```typescript
-import { invoke } from '@tauri-apps/api/core';
-
-const progress = await invoke<Progress>('get_book_progress', { bookId: 'uuid-xxx' });
-```
-
-#### 2. 添加新的书籍格式支持
-
-1. 在 `src-tauri/src/core/formats/` 下新建解析器文件
-2. 实现 `FormatParser` trait:
-   ```rust
-   pub trait FormatParser: Send + Sync {
-       fn parse(&self, path: &Path) -> Result<BookDocument, ParseError>;
-       fn extract_cover(&self, path: &Path) -> Result<Vec<u8>, ParseError>;
-       fn supports(&self, ext: &str) -> bool;
-   }
-   ```
-3. 在 `FormatRegistry` 中注册新解析器
-4. 前端无需改动，自动获得支持
-
-#### 3. 数据库迁移
-
-项目使用 `sqlx` 的离线模式与迁移管理：
+### Quick start
 
 ```bash
-# 修改 schema.sql 后，重新生成查询元数据
-cd src-tauri
-cargo sqlx prepare
+npm install
+npm run tauri dev
+npm run tauri build
 ```
 
----
+Frontend only: `npm run dev`
 
-## 同步机制
+### Usage
 
-### 局域网同步流程
+1. First launch creates a local library folder
+2. Click **Import** and pick EPUB / PDF / TXT files
+3. Click a cover in the library to start reading
+4. The right panel adjusts font, size, line spacing and theme
+5. Reading position is saved on close
 
-```
-┌──────────────┐                      ┌──────────────┐
-│   设备 A     │                      │   设备 B     │
-│ (手机/平板)  │                      │ (电脑)       │
-└──────┬───────┘                      └──────┬───────┘
-       │                                     │
-       │  1. mDNS 广播 "_vinepalma._tcp"    │
-       │◄────────────────────────────────────┤
-       │  2. 发现对端，建立 TCP 连接         │
-       │◄────────────────────────────────────►│
-       │                                     │
-       │  3. 握手交换：设备 ID + 版本号      │
-       │◄────────────────────────────────────►│
-       │                                     │
-       │  4. A 发送本地变更集 (Protobuf)     │
-       │────────────────────────────────────►│
-       │  5. B 发送本地变更集                │
-       │◄────────────────────────────────────│
-       │                                     │
-       │  6. 双方执行三向合并 (A ↔ B ↔ Base) │
-       │◄────────────────────────────────────►│
-       │                                     │
-       │  7. 确认 ACK，关闭连接              │
-       │◄────────────────────────────────────►│
-```
+### Troubleshooting
 
-### 冲突解决策略
+- **Blank EPUB** — DRM-protected books are not supported
+- **Slow PDF first paint** — large scanned files are heavy; lower the render scale in settings
+- **Library not refreshing** — restart the app
 
-| 数据类型 | 冲突场景 | 解决策略 |
-|----------|----------|----------|
-| **阅读进度** | 两台设备同时阅读同一本书 | 取 `last_read_at` 时间戳最新的进度 |
-| **高亮/笔记** | 同一位置不同批注 | 保留两条记录，标记为 "conflict" 供用户手动合并 |
-| **书签** | 相同页码重复添加 | 去重合并，保留最早创建时间 |
-| **书籍元数据** | 修改书名/作者/标签 | 以最后修改时间 (mtime) 为准 |
-| **书库增删** | A 删除，B 新增笔记 | 优先保留有笔记/进度的记录，标记删除为 "待清理" |
+## 🇯🇵 日本語
 
-### 蓝牙同步 (轻量模式)
+**Tauri 2 + React + TypeScript** 製の電子書籍リーダーです。書庫・閲覧・注釈・設定はすべてローカルで完結し、**書籍ファイルは送信されません**。
 
-适用于**仅同步阅读进度和少量笔记**的场景（数据量 < 20KB）：
+### 実装状況
 
-1. **BLE 广播**：设备作为 Peripheral 广播服务 UUID `0xLEAF`
-2. **GATT 传输**：通过自定义 Characteristic 分片传输 Protobuf 数据
-3. **无需配对**：使用 Just Works 模式，首次连接即信任
-4. **触发条件**：用户点击「附近设备同步」或阅读器检测到已配对设备靠近
+| 機能 | 状態 |
+|---|---|
+| EPUB 閲覧 | ✅ 動作 |
+| PDF 閲覧 | ✅ 動作（ズーム・連続スクロール） |
+| プレーンテキスト / Markdown | ✅ 動作 |
+| 書庫（表紙・最近読んだ本・お気に入り） | ✅ 動作 |
+| 閲覧設定（フォント・サイズ・行間・テーマ） | ✅ 動作 |
+| LAN / Bluetooth 同期 | 🚧 UI のみ、同期処理は開発中 |
+| MOBI / AZW3 / DJVU / CBZ / CBR / DOCX | 🚧 計画中 |
 
----
+> 表はコードの実装に合わせています。形式の計画は [docs/PLAN.md](./docs/PLAN.md) を参照。
 
-## 格式支持矩阵
+### 必要なもの
 
-| 格式 | 解析状态 | 排版模式 | 进度记录 | 高亮批注 | 全文搜索 | 备注 |
-|------|----------|----------|----------|----------|----------|------|
-| EPUB | ✅ 完整 | 流式重排 | ✅ | ✅ | ✅ | 支持 EPUB 3 多媒体 |
-| PDF | ✅ 完整 | 原始 / 重排 | ✅ | ✅ | ✅ | 扫描版支持 OCR 后重排 |
-| MOBI | ✅ 完整 | 流式重排 | ✅ | ✅ | ✅ | 含 AZW, AZW3 变体 |
-| TXT | ✅ 完整 | 流式重排 | ✅ | ✅ | ✅ | 自动编码检测 (UTF-8/GBK/Big5) |
-| FB2 | ✅ 完整 | 流式重排 | ✅ | ✅ | ✅ | FictionBook 俄语文学常用 |
-| HTML | ✅ 基础 | 流式重排 | ✅ | ⚠️ 部分 | ✅ | 简单 CSS 支持 |
-| Markdown | ✅ 基础 | 流式重排 | ✅ | ⚠️ 部分 | ✅ | 渲染为阅读模式 |
-| CBZ | ✅ 完整 | 单页 / 双页 | ✅ | ❌ | ❌ | ZIP 压缩图片序列 |
-| CBR | ✅ 完整 | 单页 / 双页 | ✅ | ❌ | ❌ | RAR 压缩，需 unrar |
-| CBT | ✅ 完整 | 单页 / 双页 | ✅ | ❌ | ❌ | TAR 压缩 |
-| CB7 | 🚧 开发中 | 单页 / 双页 | ✅ | ❌ | ❌ | 7z 压缩 |
-| DJVU | 📋 规划中 | 原始 | - | - | - | 依赖解码库 |
-| DOCX | 📋 规划中 | 流式重排 | - | - | - | 需解包 XML |
+| 依存 | バージョン |
+|---|---|
+| Node.js | ≥ 20 |
+| Rust | ≥ 1.77（Tauri 2） |
+| OS | Windows 10/11（WebView2）· macOS 13+ · Ubuntu 22+ |
 
----
-
-## 路线图
-
-### Phase 1: 核心阅读体验 (MVP) 🎯
-- [x] 项目脚手架与 Tauri v2 集成
-- [x] EPUB 解析与基础排版
-- [ ] PDF 渲染引擎集成 (pdfium)
-- [ ] TXT / Markdown 阅读支持
-- [ ] 基础书库管理 (导入、分类、搜索)
-- [ ] 阅读进度与基础设置持久化
-
-### Phase 2: 拟真体验与笔记 🎨
-- [ ] 翻页动画引擎 (Canvas 页角卷曲)
-- [ ] 专业排版控制 (字体、行距、分栏)
-- [ ] 高亮、批注、书签系统
-- [ ] 夜间模式与主题系统
-- [ ] 全文搜索索引 (SQLite FTS5)
-
-### Phase 3: 多端同步 🔄
-- [ ] 局域网自动发现 (mDNS)
-- [ ] 局域网 TCP 同步协议
-- [ ] 蓝牙 LE 轻量同步
-- [ ] 冲突合并与数据校验
-- [ ] WebDAV 客户端支持
-
-### Phase 4: 全格式与移动端 📱
-- [ ] MOBI / AZW3 / FB2 支持
-- [ ] 漫画阅读模式 (CBZ/CBR/CBT)
-- [ ] Android 端适配 (Tauri v2)
-- [ ] 扫描版 PDF OCR 重排
-- [ ] 封面缩略图与元数据抓取
-
-### Phase 5: 云端与生态 ☁️
-- [ ] 可选官方云端同步 (端到端加密)
-- [ ] 笔记导出插件 (Notion/Obsidian)
-- [ ] 阅读统计与数据可视化
-- [ ] 插件系统 (第三方格式扩展)
-- [ ] iOS 端支持
-
----
-
-## 贡献指南
-
-我们欢迎所有形式的贡献！请参阅 [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) 了解：
-
-- 代码规范 (Rust / TypeScript)
-- 提交信息格式 (Conventional Commits)
-- 分支管理与 PR 流程
--  Issue 与 Feature Request 模板
-
-### 快速贡献步骤
+### クイックスタート
 
 ```bash
-# 1. Fork 本仓库
-# 2. 克隆你的 Fork
-git clone https://github.com/YOUR_NAME/vinepalma-leaf.git
-
-# 3. 创建功能分支
-git checkout -b feat/your-feature-name
-
-# 4. 开发并提交
-git commit -m "feat: 添加 PDF 夜间模式支持"
-
-# 5. 推送到你的 Fork 并提交 Pull Request
-git push origin feat/your-feature-name
+npm install
+npm run tauri dev
+npm run tauri build
 ```
 
----
+### 使い方
 
-## 开源协议
-
-本项目采用 **AGPL-3.0** 协议开源。
-
-> 选择 AGPL 是为了确保 VinePalma Leaf 及其衍生作品始终保持开源自由，防止闭源云服务私有化社区贡献。若你需要在商业闭源产品中使用本项目的部分代码，请联系维护者获取商业授权。
-
----
-
-## 致谢
-
-- [Tauri](https://tauri.app/) - 跨平台桌面应用框架
-- [pdfium](https://pdfium.googlesource.com/pdfium/) - Google 开源 PDF 渲染引擎
-- [epub-rs](https://github.com/danigm/epub-rs) - Rust EPUB 解析库
-- [libmobi](https://github.com/bfabiszewski/libmobi) - MOBI/AZW 格式解析
-- [KOReader](https://github.com/koreader/koreader) - 阅读体验与排版灵感来源
-
----
-
-<p align="center">
-  🍃 <em>Read freely, sync seamlessly.</em> 🍃
-</p>
+1. 初回起動でローカル書庫フォルダが作成されます
+2. 「インポート」から EPUB / PDF / TXT を選択
+3. 書庫の表紙をクリックして閲覧開始
+4. 右パネルでフォント・サイズ・行間・テーマを調整
+5. 終了時に読書位置を保存
